@@ -83,10 +83,15 @@ It is important to _interact_ with Agda, the interactive mode has been
 implemented for several popular text-editors. The most important commands are
 the following (where the keyboard commands will vary if you don't use emacs).
 
-First of all, we'll need to _load_ the file as follows:
-- `ctrl-c ctrl-l`
+These commands work at the _top-level_ which means they can be run if the
+Agda-mode is active.
 
-This will then create _holes_ wherever we had put a `?` in the source code. We
+- `ctrl-c ctrl-l` loads and type-checks the file.
+
+- `ctrl-c ctrl-n` allows you to _normalise_ a term.
+
+
+Loading a file This will then create _holes_ wherever we had put a `?` in the source code. We
 can interact with holes with the following commands:
 
 - `ctrl-c ctrl-,` prints the currrent goal type and context to another buffer.
@@ -206,7 +211,7 @@ given term, where the idea is that `Λ n` may contain the free variables $\{0,
 
 /*
 ```agda
-open import Data.Nat hiding (compare ; _<_)
+open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Fin hiding (_+_ ; _>_)
 ```
@@ -293,11 +298,9 @@ We can define all sorts of 'sets' using inductive types, in particular also
 relations. In type theory, a binary relation $R$ on $A$ is not a set of pairs of
 $A$, but instead a function which maps two copies of $A$ to a `Set`.
 Intuitively, $R space.nobreak x space.nobreak y$ for two $x space.nobreak y : A$
-is the set of all the _proofs_ that $x$ and $y$ are related (this already hints
-at the fact that we are not really, constructing inductive _sets_ in type
-theory, but this is for a later discussion. The fact that `Rel` lives in `Set₁`
-is to avoid what is called _impredicativity_, which is also something that we
-might discuss later.)
+is the set of all the _proofs_ that $x$ and $y$ are related (that `Rel` lives in
+`Set₁` is to avoid what is called _impredicativity_, which is something we might
+discuss later.)
 
 ```agda
 Rel : Set → Set₁
@@ -308,41 +311,49 @@ Using this notion of relation we can neatly retrace our definition for the
 equational theory of $lambda beta$ (where the lines beginning with `--` are just
 comments to make the constructors look like inferences rules).
 
+
+/*
+We will use the definitions of natural numbers and finite types from the library later.
 ```agda
-data _β=_ {n : ℕ} : Rel (Λ n) where
-  refl : ∀{s}
-    ----------------------------------------
-    → s β= s
+module forgetlateraswell where
+```
+*/
 
-  sym : ∀{s t}
-    → s β= t
-    ----------------------------------------
-    → t β= s
+```agda
+  data _β=_ {n : ℕ} : Rel (Λ n) where
+    refl : ∀{s}
+      ----------------------------------------
+      → s β= s
 
-  trans : ∀{s t u}
-    → s β= t
-    → t β= u
-    ----------------------------------------
-    → s β= u
+    sym : ∀{s t}
+      → s β= t
+      ----------------------------------------
+      → t β= s
 
-  app : ∀{s s' t t'}
-    → s β= s' → t β= t'
-    ----------------------------------------
-    → (s ∙ t) β= (s' ∙ t')
+    trans : ∀{s t u}
+      → s β= t
+      → t β= u
+      ----------------------------------------
+      → s β= u
 
-  abs : ∀{s t}
-    → s β= t
-    ----------------------------------------
-    → ƛ s β= ƛ t
+    app : ∀{s s' t t'}
+      → s β= s' → t β= t'
+      ----------------------------------------
+      → (s ∙ t) β= (s' ∙ t')
 
-  β : ∀{s : Λ (suc n)} {t : Λ n}
-    ----------------------------------------
-    → ((ƛ s) ∙ t) β= {!!}
+    abs : ∀{s t}
+      → s β= t
+      ----------------------------------------
+      → ƛ s β= ƛ t
+
+    β : ∀{s : Λ (suc n)} {t : Λ n}
+      ----------------------------------------
+      → ((ƛ s) ∙ t) β= {!!}
 ```
 
 /*
 ```agda
-infixl -5 _β=_
+  infixl -5 _β=_
 ```
 */
 
@@ -359,9 +370,10 @@ term which has as many free variables as $t$.
 
 Try to define substitution for our terms.
 
+
 ```agda
-_[_/_] : {n : ℕ} → Λ (suc n) → Λ n → Fin (suc n) → Λ n
-s [ t / x ] = {!!}
+  _[_/_] : {n : ℕ} → Λ (suc n) → Λ n → Fin (suc n) → Λ n
+  s [ t / x ] = {!!}
 ```
 
 You might want to define a helper function which implements what needs to happen
@@ -378,8 +390,8 @@ Try to prove the derivation in $lambda beta$ that was done in Lecture 2, i.e.,
 give a proof of the following:
 
 ```agda
-expλβ : ∀ {n} {p q : Λ n} → p β= ƛ (ƛ (ν (suc zero))) ∙ p ∙ q
-expλβ = {!!}
+  expλβ : ∀ {n} {p q : Λ n} → p β= ƛ (ƛ (ν (suc zero))) ∙ p ∙ q
+  expλβ = {!!}
 ```
 
 What auxiliary lemmas about substitution do we need?
