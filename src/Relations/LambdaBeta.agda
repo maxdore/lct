@@ -4,6 +4,7 @@ open import Data.Nat as Nat using (ℕ ; zero ; suc)
 open import Data.Fin as Fin using (Fin ; zero ; suc)
 
 open import Base
+open import Relations.Base
 
 data β⊢_＝_  {n : ℕ} : Rel (Λ n) where
   refl : ∀{s} → β⊢ s ＝ s

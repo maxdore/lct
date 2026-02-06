@@ -37,5 +37,3 @@ _[_/_] : {n : ℕ} → Λ (suc n) → Λ n → Fin (suc n) → Λ n
 (s ∙ u) [ t / x ] = s [ t / x ] ∙ u [ t / x ]
 ƛ s [ t / x ] = ƛ ( s [ lift t zero / suc x ])
 
-Rel : Set → Set₁
-Rel A = A → A → Set
