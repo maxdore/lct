@@ -27,6 +27,3 @@ head = {!!}
 Solvable : ∀{n} → (s : Λ n) → Set
 Solvable {n} s = Σ (List (Λ n)) λ ts → β⊢ (List.foldl _∙_ s ts) ＝ (ƛ (ν zero))
 
-
-hnf→Solvable :  ∀{n} → (s : Λ n) → Finite (reduction head s) → Solvable s
-hnf→Solvable = {!!}
