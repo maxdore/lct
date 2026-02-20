@@ -63,13 +63,7 @@ u f = t f ∙ ⌜⌜ t f ⌝⌝
 liftEqiv : ∀{n}{s t : Λ n} → s ≡ t → (β⊢ s ＝ t)
 liftEqiv {s = s} {t = t} h = Eq.subst (β⊢ s ＝_) h refl
 
-impossible0 : ∀ {ℓ} {A : Set ℓ} → (x : Fin 0) → A
-impossible0 ()
-
-impossible : ∀ {ℓ}{A : Set ℓ}{y : ℕ} → (x : Fin y) → (Fin.toℕ x ≡ y) → A
-impossible x p = ⊥-elim (ℕₚ.<-irrefl p (toℕ<n x))
-
-FinZeroEmpty : (x : Fin 0) → ⊥
+FinZeroEmpty : ∀ {ℓ} {A : Set ℓ} → (x : Fin 0) → A
 FinZeroEmpty ()
 
 toℕ<Fin : ∀{y : ℕ} → (x : Fin y) → (Fin.toℕ x) Nat.< (y)
@@ -77,33 +71,19 @@ toℕ<Fin {y = zero} ()
 toℕ<Fin {suc y'} zero = Nat.z<s
 toℕ<Fin {suc y'} (suc n) = Nat.s<s (toℕ<Fin n)
 
-ltsucc : (x y : ℕ) → (x Nat.< suc y) → (x Nat.≤ y)
-ltsucc x y h = Nat.s≤s⁻¹ h
-
-toℕ<Fin'' : ∀{y : ℕ} → (x : Fin (suc y)) → (Fin.toℕ x) Nat.≤ (y)
-toℕ<Fin'' {y = zero} x = ltsucc (Fin.toℕ x) zero (toℕ<Fin x)
-toℕ<Fin'' {suc y'} zero = Nat.z≤n
-toℕ<Fin'' {suc y'} (suc n) = Eq.subst (λ k → k Nat.≤ suc y') refl (Nat.s<s (toℕ<Fin'' (n)))
-
 toℕ<Fin' : ∀{y : ℕ} → (x : Fin y) → (Fin.toℕ x) Nat.< (Fin.toℕ (Fin.fromℕ y))
 toℕ<Fin' {y = y} x = Eq.subst (λ k → (Fin.toℕ x) Nat.< k) (Eq.sym (toℕ-fromℕ y)) (toℕ<Fin x) 
-
-toℕWeakenLemma : ∀{y : ℕ} → (x : Fin y) → Fin.toℕ x ≡ Fin.toℕ (weakenFin x) → Fin.toℕ (suc x) ≡ Fin.toℕ (weakenFin (suc x))
-toℕWeakenLemma x h = Eq.subst (λ k → Fin.toℕ (suc x) ≡ k) refl (Eq.cong suc h)
 
 toℕWeaken : ∀{y : ℕ} → (x : Fin y) → Fin.toℕ x ≡ Fin.toℕ (weakenFin x)
 toℕWeaken {y = zero} ()
 toℕWeaken {suc y'} zero = refl
-toℕWeaken {suc y'} (suc n) = toℕWeakenLemma n (toℕWeaken n)
+toℕWeaken {suc y'} (suc n) = Eq.subst (λ k → Fin.toℕ (suc n) ≡ k) refl (Eq.cong suc (toℕWeaken n)) 
 
 weakenFinFromℕ : ∀{y : ℕ} → (x : Fin y) → (weakenFin x) Fin.< (Fin.fromℕ y)
 weakenFinFromℕ {y = y} x = Eq.subst (λ k → k Nat.< Fin.toℕ (Fin.fromℕ y))  (toℕWeaken x) (toℕ<Fin' x)
 
 impossible' : ∀ {ℓ}{A : Set ℓ}{y : ℕ} → (x : Fin y) → ((weakenFin x) ≡ Fin.fromℕ y) → A
 impossible' x p = ⊥-elim (FinP.<-irrefl p (weakenFinFromℕ x))
-
-weakenDefn : (s : Λ 1) → (f : Λ 0) → (β⊢ ((weaken (ƛ s)) [ ⌜⌜ t f ⌝⌝ / zero ]) ＝ ((ƛ (weaken s)) [ ⌜⌜ t f ⌝⌝ / zero ]))
-weakenDefn s f = refl
 
 justNotNothing : ∀ {ℓ}{A : Set ℓ}{a : A} → (just a ≡ nothing) → ⊥
 justNotNothing ()
@@ -116,54 +96,35 @@ substVarNothing {suc n} (suc i) (suc j) h with substVar i j in eq
 ... | nothing = Eq.cong suc (substVarNothing i j eq)
 ... | just k = ⊥-elim (justNotNothing h)
 
-substVarJust0Case1 : ∀{n} → (substVar (weakenFin zero) (suc (Fin.fromℕ n))) ≡ just zero
-substVarJust0Case1 = refl
-
-substVarInduct : ∀{n} → (x y : Fin (suc n)) → (z : Fin n) → (substVar x y ≡ just z) → (substVar (suc x) (suc y) ≡ just (suc z))
-substVarInduct x y z h = Eq.cong (Maybe.map suc) h
-
-
 impossibleJust : ∀{n} → (z : Fin (suc n)) → (Maybe.map suc nothing ≡ just z) → ⊥
 impossibleJust z ()
-
-just-suc-injective : ∀{n} → (x y : Fin n) → (just (suc x) ≡ just (suc y)) → (x ≡ y)
-just-suc-injective x y h = FinP.suc-injective (just-injective h)
 
 substVarDestruct : ∀{n} → (x y : Fin (suc n)) → (z : Fin n) → (substVar (suc x) (suc y) ≡ just (suc z)) → (substVar x y ≡ just z)
 substVarDestruct x y z h with substVar x y in eq
 ... | nothing = ⊥-elim (impossibleJust (suc z) h)
-... | just z0 = Eq.cong just (just-suc-injective z0 z h)
-
+... | just z0 = Eq.cong just (FinP.suc-injective (just-injective h))
 
 substVarJustZero : ∀{n} → (x y : Fin (suc (suc n))) → (substVar (suc x) (suc y) ≡ just zero) → ⊥
 substVarJustZero x y h with substVar x y in eq
-... | nothing = ⊥-elim (impossibleJust (zero) h)
+... | nothing = impossibleJust (zero) h
 ... | just z = FinP.0≢1+n (just-injective (Eq.trans (Eq.sym h) refl))
 
-substVarJust0 : ∀{n} → (x z : Fin (suc n)) → (substVar (weakenFin x) (suc (Fin.fromℕ n)) ≡ just z) → (Fin.toℕ x Nat.≤ n) → (x ≡ z)
-substVarJust0 zero z h h2 = just-injective (Eq.trans (Eq.sym substVarJust0Case1) h)
-substVarJust0 {zero} (suc x') zero h h2 = impossible0 x'
-substVarJust0 {suc n'} (suc x') zero h h2 = ⊥-elim (substVarJustZero (weakenFin x') (Fin.fromℕ (suc n')) h)
-substVarJust0 {zero} (suc x') (suc z') h h2 = impossible0 x'
-substVarJust0 {suc n'} (suc x') (suc z') h h2 = Eq.cong suc (substVarJust0 x' z' (substVarDestruct (weakenFin x') (Fin.fromℕ (suc n')) z' h) (Nat.s≤s⁻¹ h2))
-
-substVarJust : ∀{n} → (x z : Fin (suc n)) → (substVar (weakenFin x) (Fin.fromℕ (suc n)) ≡ just z) → (Fin.toℕ x Nat.≤ n) → (x ≡ z)
-substVarJust = substVarJust0
+substVarJust : ∀{n} → (x z : Fin (suc n)) → (substVar (weakenFin x) (suc (Fin.fromℕ n)) ≡ just z) → (x ≡ z)
+substVarJust zero z h = just-injective h
+substVarJust {zero} (suc x') z h = FinZeroEmpty x'
+substVarJust {suc n'} (suc x') zero h = ⊥-elim (substVarJustZero (weakenFin x') (Fin.fromℕ (suc n')) h)
+substVarJust {suc n'} (suc x') (suc z') h = Eq.cong suc (substVarJust x' z' (substVarDestruct (weakenFin x') (Fin.fromℕ (suc n')) z' h))
 
 weakenSub0 : ∀{n}{s s' : Λ n} → β⊢ ((weaken s) [ s' / Fin.fromℕ n ]) ＝ s
-weakenSub0 {n = 0} {s = ν x} = impossible0 x
+weakenSub0 {n = 0} {s = ν x} = FinZeroEmpty x
 weakenSub0 {n = suc n'} {s = ν x} {s' = s'} with substVar (weakenFin x) (Fin.fromℕ (suc n')) in eq
 ... | nothing = impossible' x (substVarNothing (weakenFin x) (Fin.fromℕ (suc n')) eq)
-... | just z = Eq.subst (λ k → β⊢ ν z ＝ ν k) (Eq.sym (substVarJust x z eq (toℕ<Fin'' x))) refl
+... | just z = Eq.subst (λ k → β⊢ ν z ＝ ν k) (Eq.sym (substVarJust x z eq)) refl
 weakenSub0 {s = f ∙ f₁} = app weakenSub0 weakenSub0
 weakenSub0 {s = ƛ s₁} = abs weakenSub0
 
-theExpand0 : (f : Λ 0) → (β⊢ ((((weaken f) ∙ ((weaken appK) ∙ ν zero ∙ ((weaken gnumK) ∙ ν zero)))) [ ⌜⌜ t f ⌝⌝ / zero ]) ＝ (( (weaken f) [ ⌜⌜ t f ⌝⌝ / zero ] ) ∙ ((weaken appK) [ ⌜⌜ t f ⌝⌝ / zero ] ∙ ⌜⌜ t f ⌝⌝  ∙ ((weaken gnumK) [ ⌜⌜ t f ⌝⌝ / zero ] ∙ ⌜⌜ t f ⌝⌝ ))))
-theExpand0 f = liftEqiv Eq.refl
-
 theExpand : (f : Λ 0) → (β⊢ ((((weaken f) ∙ ((weaken appK) ∙ ν zero ∙ ((weaken gnumK) ∙ ν zero)))) [ ⌜⌜ t f ⌝⌝ / zero ]) ＝ (f ∙ (appK ∙ ⌜⌜ t f ⌝⌝  ∙ (gnumK ∙ ⌜⌜ t f ⌝⌝ ))))
-theExpand f = trans (theExpand0 f) (app weakenSub0 (app (app weakenSub0 refl) (app weakenSub0 refl)))
-
+theExpand f = trans (liftEqiv Eq.refl) (app weakenSub0 (app (app weakenSub0 refl) (app weakenSub0 refl)))
 
 SndRecThmHolds : (f : Λ 0) → (β⊢ (t f ∙ (⌜⌜ t f ⌝⌝)) ＝ (f ∙ ⌜⌜ t f ∙ (⌜⌜ t f ⌝⌝ ) ⌝⌝))
 SndRecThmHolds f = trans β (trans (theExpand f) (trans (app refl (app (refl) (liftEqiv gnumKβ))) ((app refl (liftEqiv appKβ))))) 
