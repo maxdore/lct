@@ -63,19 +63,10 @@ u f = t f ∙ ⌜⌜ t f ⌝⌝
 liftEqiv : ∀{n}{s t : Λ n} → s ≡ t → (β⊢ s ＝ t)
 liftEqiv {s = s} {t = t} h = Eq.subst (β⊢ s ＝_) h refl
 
-FinZeroEmpty : ∀ {ℓ} {A : Set ℓ} → (x : Fin 0) → A
-FinZeroEmpty ()
-
-toℕ<Fin : ∀{y : ℕ} → (x : Fin y) → (Fin.toℕ x) Nat.< (y)
-toℕ<Fin {y = zero} ()
-toℕ<Fin {suc y'} zero = Nat.z<s
-toℕ<Fin {suc y'} (suc n) = Nat.s<s (toℕ<Fin n)
-
 toℕ<Fin' : ∀{y : ℕ} → (x : Fin y) → (Fin.toℕ x) Nat.< (Fin.toℕ (Fin.fromℕ y))
-toℕ<Fin' {y = y} x = Eq.subst (λ k → (Fin.toℕ x) Nat.< k) (Eq.sym (toℕ-fromℕ y)) (toℕ<Fin x) 
+toℕ<Fin' {y = y} x = Eq.subst (λ k → (Fin.toℕ x) Nat.< k) (Eq.sym (toℕ-fromℕ y)) (FinP.toℕ<n x) 
 
 toℕWeaken : ∀{y : ℕ} → (x : Fin y) → Fin.toℕ x ≡ Fin.toℕ (weakenFin x)
-toℕWeaken {y = zero} ()
 toℕWeaken {suc y'} zero = refl
 toℕWeaken {suc y'} (suc n) = Eq.subst (λ k → Fin.toℕ (suc n) ≡ k) refl (Eq.cong suc (toℕWeaken n)) 
 
@@ -94,29 +85,21 @@ substVarNothing {suc n} zero (suc j) h = ⊥-elim (justNotNothing h)
 substVarNothing {suc n} (suc i) zero h = ⊥-elim (justNotNothing h)
 substVarNothing {suc n} (suc i) (suc j) h with substVar i j in eq
 ... | nothing = Eq.cong suc (substVarNothing i j eq)
-... | just k = ⊥-elim (justNotNothing h)
-
-impossibleJust : ∀{n} → (z : Fin (suc n)) → (Maybe.map suc nothing ≡ just z) → ⊥
-impossibleJust z ()
 
 substVarDestruct : ∀{n} → (x y : Fin (suc n)) → (z : Fin n) → (substVar (suc x) (suc y) ≡ just (suc z)) → (substVar x y ≡ just z)
 substVarDestruct x y z h with substVar x y in eq
-... | nothing = ⊥-elim (impossibleJust (suc z) h)
 ... | just z0 = Eq.cong just (FinP.suc-injective (just-injective h))
 
 substVarJustZero : ∀{n} → (x y : Fin (suc (suc n))) → (substVar (suc x) (suc y) ≡ just zero) → ⊥
 substVarJustZero x y h with substVar x y in eq
-... | nothing = impossibleJust (zero) h
 ... | just z = FinP.0≢1+n (just-injective (Eq.trans (Eq.sym h) refl))
 
 substVarJust : ∀{n} → (x z : Fin (suc n)) → (substVar (weakenFin x) (suc (Fin.fromℕ n)) ≡ just z) → (x ≡ z)
 substVarJust zero z h = just-injective h
-substVarJust {zero} (suc x') z h = FinZeroEmpty x'
 substVarJust {suc n'} (suc x') zero h = ⊥-elim (substVarJustZero (weakenFin x') (Fin.fromℕ (suc n')) h)
 substVarJust {suc n'} (suc x') (suc z') h = Eq.cong suc (substVarJust x' z' (substVarDestruct (weakenFin x') (Fin.fromℕ (suc n')) z' h))
 
 weakenSub0 : ∀{n}{s s' : Λ n} → β⊢ ((weaken s) [ s' / Fin.fromℕ n ]) ＝ s
-weakenSub0 {n = 0} {s = ν x} = FinZeroEmpty x
 weakenSub0 {n = suc n'} {s = ν x} {s' = s'} with substVar (weakenFin x) (Fin.fromℕ (suc n')) in eq
 ... | nothing = impossible' x (substVarNothing (weakenFin x) (Fin.fromℕ (suc n')) eq)
 ... | just z = Eq.subst (λ k → β⊢ ν z ＝ ν k) (Eq.sym (substVarJust x z eq)) refl
