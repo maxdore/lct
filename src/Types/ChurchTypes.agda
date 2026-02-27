@@ -41,4 +41,3 @@ Church→Curry = {!!}
 
 Curry→Church : ∀{n A} → (Γ : Ctxt n) → (s : Λ n) → (Γ ⊢ s ∶ A) → Λ {!!} of A
 Curry→Church = {!!}
-
