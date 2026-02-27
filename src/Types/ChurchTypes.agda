@@ -21,11 +21,10 @@ data Λ_of_ : (n : ℕ) → Typ → Set where
 infixl 0 Λ_of_
 
 
+Curry→Church : ∀{n A} → (Γ : Ctxt n) → (s : Λ n) → (Γ ⊢ s ∶ A) → Λ n of A
+Curry→Church = {!!}
 
 Church→Curry : ∀{n A} → Λ n of A → Σ[ Γ ∈ Ctxt n ] Σ[ s ∈ Λ n ] (Γ ⊢ s ∶ A)
 Church→Curry = {!!}
 
-
-Curry→Church : ∀{n A} → (Γ : Ctxt n) → (s : Λ n) → (Γ ⊢ s ∶ A) → Λ n of A
-Curry→Church = {!!}
 
