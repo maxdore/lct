@@ -7,28 +7,19 @@ open import Data.Bool
 open import Data.Empty
 open import Data.Maybe
 open import Data.Maybe.Properties using (just-injective)
-open import Data.Fin.Properties using (suc-injective)
+open import Data.Fin.Properties as FinP using (suc-injective)
 open import Relation.Binary.PropositionalEquality as Eq using (_≡_; refl ; cong ; cong₂)
 
 open import Base
 open import Relations.LambdaBeta
 open import Weaken
 
-
 tK fK : Λ 0
 tK = ƛ (ƛ (ν (suc zero)))
 fK = ƛ (ƛ (ν zero))
 
-injectWeaken : ∀{m : ℕ} → (n : Fin m) → (Fin.inject₁ n) ≡ (weakenFin n)
-injectWeaken zero = refl
-injectWeaken (suc n) = Eq.cong suc (injectWeaken n)
-
-tKappLemma2 : (a b : Λ 0) → (β⊢ ((ƛ (ν (suc zero)) [ a / zero ]) ∙ b) ＝ ((ƛ (lift a zero)) ∙ b))
-tKappLemma2 a b = app (abs refl) refl
-
-equalAbsurd : ∀{m} → (x : Fin m) → (Fin.inject₁ x ≡ Fin.fromℕ m) → ⊥
-equalAbsurd {m} zero ()
-equalAbsurd {m} (suc x) h = equalAbsurd x (suc-injective h)
+x̸≡m : ∀{m} → (x : Fin m) → (Fin.inject₁ x ≡ Fin.fromℕ m) → ⊥
+x̸≡m x h = FinP.fromℕ≢inject₁ (Eq.sym h)
 
 substVarDestruct' : ∀{m} → (x z : Fin (suc m)) → (substVar (Fin.inject₁ (suc x)) (Fin.fromℕ (suc (suc m))) ≡ just (suc z)) → (substVar (Fin.inject₁ x) (Fin.fromℕ (suc m)) ≡ just z)
 substVarDestruct' {m} x z h with substVar (Fin.inject₁ x) (Fin.fromℕ (suc m)) in eq
@@ -42,27 +33,21 @@ substVarJust' {suc (suc m')} (suc x) (suc z) h = Eq.cong suc (substVarJust' x z 
 injectSub : ∀{m} → (b : Λ m) → (x : Fin m) → (ν (Fin.inject₁ x) [ b / (Fin.fromℕ m) ] ≡ (ν x))
 injectSub {m} b x with substVar (Fin.inject₁ x) (Fin.fromℕ m) in eq
 ... | just z = Eq.cong ν (Eq.sym (substVarJust' x z eq))
-... | nothing = ⊥-elim (equalAbsurd x (substVarNothing eq))
+... | nothing = ⊥-elim (x̸≡m x (substVarNothing eq))
 
-trueFalse' : (true ≡ false) → ⊥
-trueFalse' ()
+lessxm : ∀{m} → (x : Fin m) → (less x (Fin.fromℕ m) ≡ false) → ⊥
+lessxm {suc m} zero ()
+lessxm {suc m} (suc x) h = lessxm x h
 
-trueFalse : ∀{A : Bool} → (A ≡ true) → (A ≡ false) → ⊥
-trueFalse hT hF = trueFalse' (Eq.trans (Eq.sym hT) hF)
-
-absurd : ∀{m} → (x : Fin m) → (less x (Fin.fromℕ m) ≡ false) → ⊥
-absurd {suc m} zero h = trueFalse Eq.refl h
-absurd {suc m} (suc x) h = absurd x h
-
-tKappLemma3 : ∀{m} → (a b : Λ m) → (β⊢ lift a (Fin.fromℕ m) [ b / (Fin.fromℕ m) ] ＝ a)
-tKappLemma3 {m} (ν x) b with less x (Fin.fromℕ m) in lessh
+tKappLemma : ∀{m} → (a b : Λ m) → (β⊢ lift a (Fin.fromℕ m) [ b / (Fin.fromℕ m) ] ＝ a)
+tKappLemma {m} (ν x) b with less x (Fin.fromℕ m) in hless
 ... | true = liftEqiv (injectSub b x)
-... | false = ⊥-elim (absurd x lessh)
-tKappLemma3 (a ∙ a₁) b = app (tKappLemma3 a b) (tKappLemma3 a₁ b)
-tKappLemma3 (ƛ a) b = abs (tKappLemma3 a (lift b zero))
+... | false = ⊥-elim (lessxm x hless)
+tKappLemma (a ∙ a₁) b = app (tKappLemma a b) (tKappLemma a₁ b)
+tKappLemma (ƛ a) b = abs (tKappLemma a (lift b zero))
 
 tKapp : ∀{a b : Λ 0} → (β⊢ tK ∙ a ∙ b ＝ a)
-tKapp {a} {b} = trans (app β refl) (trans (tKappLemma2 a b) (trans β (tKappLemma3 a b)))
+tKapp {a} {b} = trans (app β refl) (trans (app (abs refl) refl) (trans β (tKappLemma a b)))
 
 fKapp : ∀{a b : Λ 0} → (β⊢ fK ∙ a ∙ b ＝ b)
 fKapp {a} {b} = trans (app (trans β (abs refl)) refl) β
